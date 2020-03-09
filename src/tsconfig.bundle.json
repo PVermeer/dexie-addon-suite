@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "sourceMap": true,
+    "removeComments": false
+  },
+  "files": [
+    "index.ts"
+  ],
+  "include": [
+    "../src",
+    "../types"
+  ]
+}
