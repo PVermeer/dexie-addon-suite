@@ -14,7 +14,7 @@
     "removeComments": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
-    "module": "ES2015",
+    "module": "ESNext",
     "moduleResolution": "node",
     "importHelpers": true,
     "target": "ES5",

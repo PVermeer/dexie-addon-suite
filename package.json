@@ -42,7 +42,10 @@
     }
   },
   "dependencies": {
-    "lodash": "^4.17.15"
+    "@pvermeer/dexie-encrypted-addon": "^2.0.0-beta.1",
+    "@pvermeer/dexie-immutable-addon": "^1.0.0-beta.2",
+    "@pvermeer/dexie-populate-addon": "^1.0.0-beta.2",
+    "@pvermeer/dexie-rxjs-addon": "^1.0.0-beta.6"
   },
   "devDependencies": {
     "@angular/compiler": "^8.2.14",
@@ -59,7 +62,7 @@
     "@types/karma": "^3.0.5",
     "@types/lodash": "^4.14.149",
     "@types/lodash-es": "^4.17.3",
-    "dexie": "^3.0.0-rc.4",
+    "dexie": "^3.0.0-rc.5",
     "faker": "^4.1.0",
     "git-branch-is": "^3.1.0",
     "husky": "^4.0.7",
@@ -81,8 +84,10 @@
     "lodash-es": "^4.17.15",
     "nodemon": "^2.0.2",
     "rimraf": "^3.0.0",
+    "rxjs": "^6.5.4",
     "semantic-release": "^17.0.4",
     "semantic-release-cli": "^5.2.3",
+    "simplytyped": "^3.2.3",
     "ts-loader": "^6.2.1",
     "ts-node": "^8.6.2",
     "tslint": "^5.20.1",
