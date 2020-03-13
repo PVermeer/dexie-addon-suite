@@ -1,8 +1,8 @@
+import { Ref } from '@pvermeer/dexie-populate-addon';
 import Dexie from 'dexie';
 import faker from 'faker/locale/en';
-import { addonSuite } from '../../src/suite';
+import { addonSuite } from '../../src/addon-suite';
 import { Encryption } from '../../src/index';
-import { Ref } from '@pvermeer/dexie-populate-addon';
 
 export class HairColor {
     id?: number;

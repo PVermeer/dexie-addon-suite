@@ -17,7 +17,7 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "ES5",
+    "target": "ES6",
     "typeRoots": [
       "node_modules/@types",
       "src/types"

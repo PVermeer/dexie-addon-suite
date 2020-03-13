@@ -1,6 +1,6 @@
 // tslint:disable: no-non-null-assertion
-import { Populated } from '@pvermeer/dexie-populate-addon/dist/types';
-import { Subscription } from 'rxjs';
+import { Populated } from '@pvermeer/dexie-populate-addon';
+import { Observable, Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { Encryption } from '../../../src/index';
 import { Club, Friend, Group, HairColor, mockClubs, mockFriends, mockGroups, mockHairColors, mockStyles, mockThemes, Style, TestDatabase, Theme } from '../../mocks/mocks';
@@ -14,7 +14,6 @@ describe('Suite', () => {
     let id: string;
     let friendExpected: Friend;
     let friendExpectedPop: Populated<Friend, false, string>;
-    let getFriend: Friend;
     let clubs: Club[];
     let groups: Group[];
     let hairColors: HairColor[];
@@ -93,7 +92,6 @@ describe('Suite', () => {
         friendExpectedPop.hasFriends[0]!.group = groups[2] as any;
         friendExpectedPop.hasFriends[0]!.hairColor = hairColors[2] as any;
 
-        getFriend = await db.friends.get(id) as Friend;
         subs = new Subscription();
     });
     afterEach(async () => {
@@ -117,6 +115,7 @@ describe('Suite', () => {
             });
         });
         it('should not change input object', async () => {
+            const getFriend = await db.friends.get(id) as Friend;
             expect(friend.id).toBeUndefined();
             expect(getFriend!.id).toBeTruthy();
         });
@@ -124,6 +123,7 @@ describe('Suite', () => {
 
     describe('Encrypted', () => {
         it('should hash id', async () => {
+            const getFriend = await db.friends.get(id) as Friend;
             const hashId = Encryption.hash(friend);
             expect(getFriend.id).toBe(hashId);
         });
@@ -137,17 +137,28 @@ describe('Suite', () => {
             expect(friendRaw!.firstName).not.toBe(friend.firstName);
         });
         it('should encrypt / decrypt firstName', async () => {
+            const getFriend = await db.friends.get(id) as Friend;
             expect(getFriend).toEqual(friendExpected);
         });
     });
 
     describe('Rxjs', () => {
+        it('should have db.changes$', () => {
+            expect(db.changes$ instanceof Observable).toBeTruthy();
+        });
         it('should have $ class', () => {
             expect(db.friends.$).toBeTruthy();
         });
         it('should decrypt firstName', async () => {
             const friendObs = await db.friends.$.get(id).pipe(take(1)).toPromise();
             expect(friendObs).toEqual(friendExpected);
+        });
+        it('should have table with populate().$', async () => {
+            expect(db.friends.populate().$).toBeTruthy();
+        });
+        it('should be able to get a populated observable', async () => {
+            const getFriend = await db.friends.populate().$.get(id).pipe(take(1)).toPromise();
+            expect(getFriend).toEqual(friendExpectedPop);
         });
     });
 
@@ -159,6 +170,12 @@ describe('Suite', () => {
             const friendPop = await db.friends.populate().get(id);
             expect(friendPop).toEqual(friendExpectedPop as any);
         });
+        it('should have table with $.populate()', async () => {
+            expect(db.friends.$.populate()).toBeTruthy();
+        });
+        it('should be able to get a populated observable', async () => {
+            const getFriend = await db.friends.$.populate().get(id).pipe(take(1)).toPromise();
+            expect(getFriend).toEqual(friendExpectedPop);
+        });
     });
-
 });
