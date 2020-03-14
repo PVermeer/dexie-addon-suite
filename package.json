@@ -101,7 +101,8 @@
     "webpack-node-externals": "^1.7.2"
   },
   "peerDependencies": {
-    "dexie": "^3.0.0-rc.4"
+    "dexie": "^3.0.0-rc.4",
+    "rxjs": "^6.5.4"
   },
   "repository": {
     "type": "git",

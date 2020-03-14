@@ -16,7 +16,7 @@ const config = {
                 inlineDeclareExternals: true
             },
             libraries: {
-                // inlinedLibraries: configLib.inlinedLibraries
+                inlinedLibraries: configLib.inlinedLibraries
             }
         }
     ]
