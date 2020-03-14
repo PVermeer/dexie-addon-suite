@@ -3,6 +3,7 @@ import Dexie from 'dexie';
 import faker from 'faker/locale/en';
 import { addonSuite } from '../../src/addon-suite';
 import { Encryption } from '../../src/index';
+import { OmitMethods } from '../../src/utility-types';
 
 export class HairColor {
     id?: number;

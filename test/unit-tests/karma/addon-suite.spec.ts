@@ -1,8 +1,10 @@
 // tslint:disable: no-non-null-assertion
 import { Populated } from '@pvermeer/dexie-populate-addon';
+import faker from 'faker/locale/nl';
 import { Observable, Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { Encryption } from '../../../src/index';
+import { flatPromise } from '../../../src/utility';
 import { Club, Friend, Group, HairColor, mockClubs, mockFriends, mockGroups, mockHairColors, mockStyles, mockThemes, Style, TestDatabase, Theme } from '../../mocks/mocks';
 
 describe('Suite', () => {
@@ -176,6 +178,328 @@ describe('Suite', () => {
         it('should be able to get a populated observable', async () => {
             const getFriend = await db.friends.$.populate().get(id).pipe(take(1)).toPromise();
             expect(getFriend).toEqual(friendExpectedPop);
+        });
+    });
+
+    describe('Populate - Observable', () => {
+        const methods = [
+            {
+                desc: '$.populate()',
+                method: (dbInput: TestDatabase) => dbInput.friends.$.populate()
+            },
+            {
+                desc: 'populate().$',
+                method: (dbInput: TestDatabase) => dbInput.friends.populate().$
+            }
+        ];
+        methods.forEach(_method => {
+            describe(_method.desc, () => {
+                let method: ReturnType<typeof _method.method>;
+                beforeEach(() => {
+                    method = _method.method(db);
+                });
+                it('should be an observable', async () => {
+                    const obs$ = method.get(id);
+                    expect(obs$ instanceof Observable).toBeTrue();
+                });
+                it('should be open', async () => {
+                    const obs$ = method.get(id);
+                    let sub = new Subscription();
+                    const emitPromise = new Promise(resolve => {
+                        sub = subs.add(obs$.subscribe(
+                            () => resolve()
+                        ));
+                    });
+                    await emitPromise;
+                    expect(sub.closed).toBe(false);
+                });
+                it('should emit the correct value', async () => {
+                    const obs$ = method.get(id);
+                    const getFriend = await obs$.pipe(take(1)).toPromise();
+                    expect(getFriend).toEqual(friendExpectedPop);
+
+                    const [newFriend] = mockFriends(1);
+                    const newId = await db.friends.add(newFriend);
+                    const obsNew$ = method.get(newId);
+                    const getNewFriend = await obsNew$.pipe(take(1)).toPromise();
+                    expect({ ...getNewFriend }).toEqual({ ...newFriend, id: newId });
+
+                    const obsOld$ = method.get(id);
+                    const getOldFriend = await obsOld$.pipe(take(1)).toPromise();
+                    expect(getOldFriend).toEqual(friendExpectedPop);
+                });
+                it('should emit on record update', async () => {
+                    let emitCount = 0;
+                    let obsFriend: Populated<Friend, false, string> | undefined;
+                    const emitPromise = new Promise(resolve => {
+                        subs.add(method.get(id).subscribe(
+                            friendEmit => {
+                                emitCount++;
+                                obsFriend = friendEmit;
+                                if (emitCount === 2) { resolve(); }
+                            }
+                        ));
+                    });
+                    await db.friends.update(id, { firstName: 'TestieUpdate' });
+                    await emitPromise;
+                    expect(emitCount).toBe(2);
+                    expect({ ...obsFriend }).toEqual({ ...friendExpectedPop, firstName: 'TestieUpdate' });
+                });
+                it('should emit undefined on record delete', async () => {
+                    let emitCount = 0;
+                    let obsFriend: Populated<Friend, false, string> | undefined;
+
+                    const waits = new Array(2).fill(null).map(() => flatPromise());
+                    subs.add(method.get(id).subscribe(
+                        friendEmit => {
+                            emitCount++;
+                            obsFriend = friendEmit;
+                            switch (emitCount) {
+                                case 1: waits[0].resolve(); break;
+                                case 2: waits[1].resolve(); break;
+                            }
+                        }));
+
+                    await waits[0].promise;
+                    expect(emitCount).toBe(1);
+                    expect(obsFriend).toEqual(friendExpectedPop);
+                    await db.friends.delete(id);
+                    await waits[1].promise;
+                    expect(emitCount).toBe(2);
+                    expect(obsFriend).toBe(undefined);
+                });
+                it('should emit undefined on record delete (slowed)', async () => {
+                    let emitCount = 0;
+                    let obsFriend: Populated<Friend, false, string> | undefined;
+
+                    const waits = new Array(2).fill(null).map(() => flatPromise());
+                    subs.add(method.get(id).subscribe(
+                        friendEmit => {
+                            emitCount++;
+                            obsFriend = friendEmit;
+                            switch (emitCount) {
+                                case 1: waits[0].resolve(); break;
+                                case 2: waits[1].resolve(); break;
+                            }
+                        }));
+
+                    await waits[0].promise;
+                    expect(emitCount).toBe(1);
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    // Slow down to force two emits from db.changes$
+                    await new Promise(resolve => setTimeout(() => resolve(), 500));
+
+                    await db.friends.delete(id);
+                    await waits[1].promise;
+                    expect(emitCount).toBe(2);
+                    expect(obsFriend).toBe(undefined);
+                });
+                it('should emit undefined when id is not found', async () => {
+                    let emitCount = 0;
+                    let obsFriend: Populated<Friend, false, string> | undefined;
+                    const emitPromise = new Promise(resolve => {
+                        subs.add(method.get('dsfsdfsdfsdfsdfsdfsdf').subscribe(
+                            friendEmit => {
+                                emitCount++;
+                                obsFriend = friendEmit;
+                                if (emitCount === 1) { resolve(); }
+                            }
+                        ));
+                    });
+                    await emitPromise;
+                    expect(obsFriend).toBe(undefined);
+                });
+                it('should emit when record is created after subscribe', async () => {
+                    const [newFriend] = mockFriends(1);
+                    const newId = Encryption.hash(newFriend);
+                    let emitCount = 0;
+                    let obsFriend: Populated<Friend, false, string> | undefined;
+                    const emitPromise = new Promise(resolve => {
+                        subs.add(method.get(newId).subscribe(
+                            friendEmit => {
+                                emitCount++;
+                                obsFriend = friendEmit;
+                                if (emitCount === 2) { resolve(); }
+                            }
+                        ));
+                    });
+                    await db.friends.add(newFriend);
+                    await emitPromise;
+                    expect({ ...obsFriend }).toEqual({ ...newFriend, id: newId } as Populated<Friend, false, string>);
+                });
+                it('should not emit when no changes', async () => {
+                    const newFriends = mockFriends(50);
+                    const newIds = await db.friends.bulkAdd(newFriends, { allKeys: true });
+
+                    const idx1 = faker.random.number({ min: 0, max: 9 });
+                    const id1 = newIds[idx1];
+                    let emitCount = 0;
+
+                    const waits = new Array(4).fill(null).map(() => flatPromise());
+                    subs.add(method.get(id1).subscribe(
+                        () => {
+                            emitCount++;
+                            switch (emitCount) {
+                                case 1:
+                                    waits[0].resolve();
+                                    break;
+                                case 2:
+                                    waits[1].resolve();
+                                    waits[2].resolve();
+                                    waits[3].resolve();
+                                    break;
+                            }
+                        }
+                    ));
+                    // First emit
+                    await waits[0].promise;
+                    expect(emitCount).toBe(1);
+
+                    // Update different record
+                    const idx2 = faker.random.number({ min: 10, max: 19 });
+                    const id2 = newIds[idx2];
+                    await db.friends.update(id2, newFriends[idx2]);
+                    setTimeout(() => waits[1].resolve(), 500);
+                    await waits[1].promise;
+                    expect(emitCount).toBe(1);
+
+                    // Update record with same data
+                    await db.friends.update(id1, newFriends[idx1]);
+                    setTimeout(() => waits[2].resolve(), 500);
+                    await waits[2].promise;
+                    expect(emitCount).toBe(1);
+
+                    // Update record with different data
+                    await db.friends.update(id1, newFriends[49]);
+                    await waits[3].promise;
+                    expect(emitCount).toBe(2);
+                });
+                it('should emit when populated property is updated', async () => {
+                    let emitCount = 0;
+                    let obsFriend: Populated<Friend, false, string> | undefined;
+
+                    const waits = new Array(6).fill(null).map(() => flatPromise());
+                    subs.add(method.get(id).subscribe(
+                        friendEmit => {
+                            emitCount++;
+                            obsFriend = friendEmit;
+                            waits[emitCount - 1].resolve();
+                        }));
+
+                    await waits[0].promise;
+                    expect(emitCount).toBe(1);
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await db.clubs.update(clubIds[1], { name: 'Testie name' });
+                    await waits[1].promise;
+                    expect(emitCount).toBe(2);
+                    friendExpectedPop.memberOf[1]!.name = 'Testie name';
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await db.themes.update(themeIds[1], { name: 'Testie name' });
+                    await waits[2].promise;
+                    expect(emitCount).toBe(3);
+                    friendExpectedPop.memberOf[1]!.theme!.name = 'Testie name';
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await db.friends.update(id, { group: groupIds[4] });
+                    await waits[3].promise;
+                    expect(emitCount).toBe(4);
+                    friendExpectedPop.group = groups[4];
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await db.friends.update(id, { firstName: 'Testie name' });
+                    await waits[4].promise;
+                    expect(emitCount).toBe(5);
+                    friendExpectedPop.firstName = 'Testie name';
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await db.groups.update(groupIds[2], { name: 'Testie name' });
+                    await waits[5].promise;
+                    expect(emitCount).toBe(6);
+                    friendExpectedPop.hasFriends[0]!.group!.name = 'Testie name';
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await new Promise(resolve => setTimeout(() => resolve(), 500));
+                    expect(emitCount).toBe(6);
+                });
+                it('should emit when updating a nested populated id, then update update this record', async () => {
+                    let emitCount = 0;
+                    let obsFriend: Populated<Friend, false, string> | undefined;
+                    const newGroups = mockGroups();
+                    const newGroupIds = await db.groups.bulkAdd(newGroups, { allKeys: true });
+
+                    const waits = new Array(6).fill(null).map(() => flatPromise());
+                    subs.add(method.get(id).subscribe(
+                        friendEmit => {
+                            emitCount++;
+                            obsFriend = friendEmit;
+                            waits[emitCount - 1].resolve();
+                        }));
+
+                    await waits[0].promise;
+                    expect(emitCount).toBe(1);
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await db.friends.update(ids[1], { group: newGroupIds[1] });
+                    await waits[1].promise;
+                    expect(emitCount).toBe(2);
+                    newGroups[1].id = newGroupIds[1];
+                    friendExpectedPop.hasFriends[0]!.group! = newGroups[1];
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await db.groups.update(newGroupIds[1], { name: 'Testie name' });
+                    await waits[2].promise;
+                    expect(emitCount).toBe(3);
+                    friendExpectedPop.hasFriends[0]!.group!.name = 'Testie name';
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await new Promise(resolve => setTimeout(() => resolve(), 500));
+                    expect(emitCount).toBe(3);
+                });
+                it('should not emit when other populated properties are updated', async () => {
+                    let emitCount = 0;
+                    let obsFriend: Populated<Friend, false, string> | undefined;
+
+                    const newClubIds = await db.clubs.bulkAdd(mockClubs(), { allKeys: true });
+                    const newThemeIds = await db.themes.bulkAdd(mockThemes(), { allKeys: true });
+                    const newGroupIds = await db.groups.bulkAdd(mockGroups(), { allKeys: true });
+
+                    const waits = new Array(4).fill(null).map(() => flatPromise());
+                    subs.add(method.get(id).subscribe(
+                        friendEmit => {
+                            emitCount++;
+                            obsFriend = friendEmit;
+                            waits[emitCount - 1].resolve();
+                        }));
+
+                    await waits[0].promise;
+                    expect(emitCount).toBe(1);
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await db.clubs.update(newClubIds[2], { name: 'Testie name' });
+                    setTimeout(() => waits[1].resolve(), 500);
+                    await waits[1].promise;
+                    expect(emitCount).toBe(1);
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await db.themes.update(newThemeIds[2], { name: 'Testie name' });
+                    setTimeout(() => waits[2].resolve(), 500);
+                    await waits[2].promise;
+                    expect(emitCount).toBe(1);
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await db.groups.update(newGroupIds[2], { name: 'Testie name' });
+                    setTimeout(() => waits[3].resolve(), 500);
+                    await waits[3].promise;
+                    expect(emitCount).toBe(1);
+                    expect(obsFriend).toEqual(friendExpectedPop);
+
+                    await new Promise(resolve => setTimeout(() => resolve(), 500));
+                    expect(emitCount).toBe(1);
+                });
+            });
         });
     });
 });

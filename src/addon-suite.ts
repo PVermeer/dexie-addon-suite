@@ -3,7 +3,7 @@ import { immutable } from '@pvermeer/dexie-immutable-addon';
 import { populate } from '@pvermeer/dexie-populate-addon';
 import { dexieRxjs } from '@pvermeer/dexie-rxjs-addon';
 import Dexie from 'dexie';
-import { getPopulatedObservableTable } from './observableTableExt.class';
+import { getPopulatedObservableTable } from './tableExt.class';
 
 interface Config {
     immutable?: boolean;
