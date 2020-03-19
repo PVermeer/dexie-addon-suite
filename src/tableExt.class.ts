@@ -1,6 +1,6 @@
 import { Populated, PopulateOptions, PopulateTable, RelationalDbSchema } from '@pvermeer/dexie-populate-addon';
 import { ObservableTable } from '@pvermeer/dexie-rxjs-addon';
-import { Dexie, Table, TableSchema, Transaction } from 'dexie';
+import Dexie, { Table, TableSchema, Transaction } from 'dexie';
 import { PopulateTableObservable } from './populateTableObservable.class';
 import { DexieExtended } from './typings';
 

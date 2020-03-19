@@ -1,6 +1,6 @@
 import { Populate, Populated, PopulateOptions, RelationalDbSchema } from '@pvermeer/dexie-populate-addon';
 import { ObservableTable, ObservableWhereClause } from '@pvermeer/dexie-rxjs-addon';
-import { Dexie, Table } from 'dexie';
+import Dexie, { Table } from 'dexie';
 import { isEqual } from 'lodash';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, filter, flatMap, share, startWith, switchMap } from 'rxjs/operators';

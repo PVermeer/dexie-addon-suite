@@ -1,5 +1,5 @@
 import { RelationalDbSchema } from '@pvermeer/dexie-populate-addon';
-import { Collection, Dexie, KeyRange, Table, TableSchema, Transaction, WhereClause } from 'dexie';
+import Dexie, { Collection, KeyRange, Table, TableSchema, Transaction, WhereClause } from 'dexie';
 
 export interface DexieExtended extends Dexie {
     Table: new <T, TKey>(name: string, tableSchema: TableSchema, optionalTrans?: Transaction) => Table<T, TKey>;
