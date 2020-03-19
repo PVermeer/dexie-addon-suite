@@ -7,9 +7,7 @@ import { getPopulatedObservableTable } from './tableExt.class';
 
 interface Config {
     immutable?: boolean;
-    encrypted?: {
-        options?: EncryptedOptions
-    };
+    encrypted?: EncryptedOptions;
     rxjs?: boolean;
     populate?: boolean;
 }
@@ -30,9 +28,9 @@ export function addonSuite(db: Dexie, config: Config | EncryptedOptions) {
         addons.immutable = config.immutable || true;
     } else {
         Object.entries(config as Config).forEach(([key, value]) => {
-            if (value && addons[key]) { addons[key] = true; }
+            if (value && key in addons) { addons[key] = true; }
             if (key === 'encrypted') {
-                secretKey = value.options.secretKey;
+                secretKey = value.secretKey;
                 addons.immutable = value.immutable || true;
             }
         });
@@ -41,12 +39,7 @@ export function addonSuite(db: Dexie, config: Config | EncryptedOptions) {
     // Load addons
     Object.entries(addons).forEach(([key, value]) => {
         if (!value) { return; }
-        switch (key) {
-            case 'immutable': immutable(db); break;
-            case 'encrypted': encrypted(db, { immutable: addons.immutable, secretKey }); break;
-            case 'rxjs': dexieRxjs(db); break;
-            case 'populate': populate(db); break;
-        }
+        loadAddon(key, db, addons, secretKey);
     });
 
     // Perform actions for combinations
@@ -59,4 +52,18 @@ export function addonSuite(db: Dexie, config: Config | EncryptedOptions) {
     }
 
 }
+
+export const loadAddon = (
+    key: string,
+    db: Dexie,
+    addons: Record<keyof Config, boolean>,
+    secretKey: string | undefined
+) => {
+    switch (key) {
+        case 'immutable': immutable(db); break;
+        case 'encrypted': encrypted(db, { immutable: addons.immutable, secretKey }); break;
+        case 'rxjs': dexieRxjs(db); break;
+        case 'populate': populate(db); break;
+    }
+};
 

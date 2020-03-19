@@ -1,21 +1,11 @@
 import { Populate, Populated, PopulateOptions, RelationalDbSchema } from '@pvermeer/dexie-populate-addon';
-import { ObservableTable } from '@pvermeer/dexie-rxjs-addon';
+import { ObservableTable, ObservableWhereClause } from '@pvermeer/dexie-rxjs-addon';
 import { Dexie, Table } from 'dexie';
 import { isEqual } from 'lodash';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, filter, flatMap, share, startWith, switchMap } from 'rxjs/operators';
-import { PickMethods, Unpacked } from './utility-types';
-
-/**
- * Overwrite Observable returns to Populated Observable returns.
- */
-export type PopulateTableObservableT<
-    T, TKey, B extends boolean, K extends string, U = PickMethods<PopulateTableObservable<T, TKey, B, K>>
-    > = {
-        [P in keyof U]: U[P] extends (...args: infer A) => infer R ? R extends Observable<infer O> ?
-        (...args: A) => Observable<O extends any[] ? Populated<O[number], B, K>[] : Populated<O, B, K>> :
-        never : never
-    };
+import { PopulateObservableWhereClause } from './populateObservableWhereClause.class';
+import { Unpacked } from './utility-types';
 
 /**
  * Extended ObservableTable class that overwrites the methods to return a populated observable.
@@ -24,13 +14,13 @@ export class PopulateTableObservable<T, TKey, B extends boolean, K extends strin
 
     constructor(
         _db: Dexie,
-        _table: Table<T, TKey>,
+        _table: Table<any, TKey>,
         private _keysOrOptions: K[] | PopulateOptions<B> | undefined,
         private _relationalSchema: RelationalDbSchema
     ) {
-        super(_db, _table);
+        super(_db, _table as any);
 
-        const populateResult = async (result: any) => {
+        const populateResult = async (result: T) => {
             const populate = new Populate(result, this._keysOrOptions, this._db, this._table, this._relationalSchema);
             const getPopulated = await populate.populated;
             const populated = Array.isArray(result) ? getPopulated : (getPopulated.length ? getPopulated[0] : undefined);
@@ -38,45 +28,56 @@ export class PopulateTableObservable<T, TKey, B extends boolean, K extends strin
             return { populated, populatedTree };
         };
 
+        const populateObservable = (observable: Observable<T>) => {
+            let popResult: Unpacked<ReturnType<typeof populateResult>>;
+            return observable.pipe(
+                flatMap(async (result) => {
+                    popResult = await populateResult(result);
+                    return result;
+                }),
+                switchMap(result => this._db.changes$.pipe(
+                    filter(changes => changes.some(change => {
+                        if (!popResult.populatedTree[change.table]) { return false; }
+                        const obj = 'obj' in change ? change.obj : change.oldObj;
+                        return Object.keys(obj).some(objKey =>
+                            popResult.populatedTree[change.table][objKey] &&
+                            popResult.populatedTree[change.table][objKey][obj[objKey]]);
+                    })),
+                    startWith(null),
+                    flatMap(async (_, i) => {
+                        if (i > 0) { popResult = await populateResult(result); }
+                        return popResult.populated;
+                    }),
+                    distinctUntilChanged<Populated<T, B, string> | Populated<T, B, string>[] | undefined>(isEqual),
+                    share()
+                ))
+            );
+        };
+
         // Override methods to return a populated observable
-        Object.getOwnPropertyNames(ObservableTable.prototype).forEach(key => {
-            if (typeof super[key] === 'function' && key !== 'constructor') {
+        Object.getOwnPropertyNames(ObservableTable.prototype).forEach(name => {
+            if (typeof super[name] !== 'function' || name === 'constructor' || name.startsWith('_')) { return; }
 
-                // Hijack method
-                this[key] = (...args: any[]) => {
+            // Hijack method
+            this[name] = (...args: any[]) => {
 
-                    const returnValue = super[key](...args);
-                    if (!(returnValue instanceof Observable)) { return returnValue; }
+                const returnValue = super[name](...args);
 
-                    let popResult: Unpacked<ReturnType<typeof populateResult>>;
+                if (returnValue instanceof Observable) { return populateObservable(returnValue); }
 
-                    return returnValue.pipe(
-                        flatMap(async (result) => {
-                            popResult = await populateResult(result);
-                            return result;
-                        }),
-                        switchMap(result => this._db.changes$.pipe(
-                            filter(changes => changes.some(change => {
-                                if (!popResult.populatedTree[change.table]) { return false; }
-                                const obj = 'obj' in change ? change.obj : change.oldObj;
-                                return Object.keys(obj).some(objKey =>
-                                    popResult.populatedTree[change.table][objKey] &&
-                                    popResult.populatedTree[change.table][objKey][obj[objKey]]);
-                            })),
-                            startWith(null),
-                            flatMap(async (_, i) => {
-                                if (i > 0) { popResult = await populateResult(result); }
-                                return popResult.populated;
-                            }),
-                            distinctUntilChanged(isEqual),
-                            share()
-                        ))
-                    );
+                if (returnValue instanceof ObservableWhereClause) {
 
-                };
+                    const observableWhereClause = returnValue;
 
-            }
+                    return new PopulateObservableWhereClause(this._db, this._table, _keysOrOptions, observableWhereClause);
+
+                }
+
+                return returnValue;
+            };
+
         });
+
     }
 
 }

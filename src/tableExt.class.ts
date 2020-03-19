@@ -1,17 +1,17 @@
-import { PopulateOptions, PopulateTable, RelationalDbSchema } from '@pvermeer/dexie-populate-addon';
+import { Populated, PopulateOptions, PopulateTable, RelationalDbSchema } from '@pvermeer/dexie-populate-addon';
 import { ObservableTable } from '@pvermeer/dexie-rxjs-addon';
 import { Dexie, Table, TableSchema, Transaction } from 'dexie';
-import { PopulateTableObservable, PopulateTableObservableT } from './populateTableObservable.class';
+import { PopulateTableObservable } from './populateTableObservable.class';
 import { DexieExtended } from './typings';
 
 export class PopulatedTableObservable<T, TKey, B extends boolean, K extends string> extends PopulateTable<T, TKey, B, K> {
 
-    public $: PopulateTableObservableT<T, TKey, B, K> = new PopulateTableObservable<T, TKey, B, K>(
+    public $: PopulateTableObservable<Populated<T, B, K>, TKey, B, K> = new PopulateTableObservable<Populated<T, B, K>, TKey, B, K>(
         this._db,
         this._table,
         this._keysOrOptions,
         this._relationalSchema
-    ) as unknown as PopulateTableObservableT<T, TKey, B, K>;
+    );
 
     constructor(
         _keysOrOptions: K[] | PopulateOptions<B> | undefined,
@@ -25,13 +25,14 @@ export class PopulatedTableObservable<T, TKey, B extends boolean, K extends stri
 
 export class ObservableTablePopulated<T, TKey> extends ObservableTable<T, TKey> {
 
-    public populate<B extends boolean = false, K extends string = string>(keysOrOptions?: K[] | PopulateOptions<B>) {
-        return new PopulateTableObservable<T, TKey, B, K>(
+    public populate<B extends boolean = false, K extends string = string>(keysOrOptions?: K[] | PopulateOptions<B>)
+        : PopulateTableObservable<Populated<T, B, K>, TKey, B, K> {
+        return new PopulateTableObservable<Populated<T, B, K>, TKey, B, K>(
             this._db,
             this._table,
             keysOrOptions,
             (this._db as DexieExtended)._relationalSchema
-        ) as unknown as PopulateTableObservableT<T, TKey, B, K>;
+        );
     }
 
     constructor(

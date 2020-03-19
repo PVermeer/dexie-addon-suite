@@ -44,12 +44,12 @@
     }
   },
   "dependencies": {
-    "tslib": "^1.11.1",
-    "@pvermeer/dexie-encrypted-addon": "^2.0.0-beta.1",
-    "@pvermeer/dexie-immutable-addon": "^1.0.0-beta.2",
-    "@pvermeer/dexie-populate-addon": "^1.0.0-beta.2",
-    "@pvermeer/dexie-rxjs-addon": "^1.0.0-beta.6",
-    "lodash": "^4.17.15"
+    "@pvermeer/dexie-encrypted-addon": "^2.0.0-beta.3",
+    "@pvermeer/dexie-immutable-addon": "^1.0.0-beta.4",
+    "@pvermeer/dexie-populate-addon": "^1.0.0-beta.4",
+    "@pvermeer/dexie-rxjs-addon": "^1.0.0-beta.12",
+    "lodash": "^4.17.15",
+    "tslib": "^1.11.1"
   },
   "devDependencies": {
     "@babel/core": "^7.8.7",
