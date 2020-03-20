@@ -1,24 +1,24 @@
 import { PopulateOptions } from '@pvermeer/dexie-populate-addon';
-import { ObservableCollection, ObservableWhereClause } from '@pvermeer/dexie-rxjs-addon';
+import { ObservableWhereClause } from '@pvermeer/dexie-rxjs-addon';
 import Dexie, { Table } from 'dexie';
-import { DexieExtended } from './typings';
 import { PopulateObservableCollection } from './populate-observable-collection.class';
+import { DexieExtended } from './typings';
 
 export class PopulateObservableWhereClause<T, TKey, B extends boolean, K extends string> extends ObservableWhereClause<T, TKey> {
 
     get Collection() {
-        const db = this._db as DexieExtended;
+        const dbExt = this._db as DexieExtended;
         const table = this._table;
         const keysOrOptions = this._keysOrOptions;
 
         // Hijack Collection class getter.
         return class Callable {
-            constructor(...args: ConstructorParameters<typeof db.Collection>) {
+            constructor(...args: ConstructorParameters<typeof dbExt.Collection>) {
 
-                const collection = new db.Collection<T, TKey>(...args);
-                return new PopulateObservableCollection(db, table, collection, keysOrOptions);
+                const collection = new dbExt.Collection<T, TKey>(...args);
+                return new PopulateObservableCollection(dbExt, table, collection, keysOrOptions);
             }
-        } as unknown as typeof ObservableCollection;
+        };
     }
 
     constructor(

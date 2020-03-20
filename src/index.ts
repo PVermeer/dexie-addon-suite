@@ -11,7 +11,7 @@ export { ObservableTablePopulated, PopulatedTableObservable } from './table-exte
 
 declare module 'dexie' {
 
-    /*
+    /**
      * Extended Table class with suite methods.
      */
     interface Table<T, TKey> {

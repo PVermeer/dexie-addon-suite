@@ -1,7 +1,8 @@
+import { EncryptedOptions } from '@pvermeer/dexie-encrypted-addon';
 import { Ref } from '@pvermeer/dexie-populate-addon';
 import Dexie from 'dexie';
 import faker from 'faker/locale/en';
-import { addonSuite } from '../../src/addon-suite';
+import { addonSuite, Config } from '../../src/addon-suite';
 import { Encryption } from '../../src/index';
 import { OmitMethods } from '../../src/utility-types';
 
@@ -115,233 +116,74 @@ export class Friend {
     }
 }
 
+const getDatabase = (
+    dexie: typeof Dexie,
+    name: string,
+    config?: Config & EncryptedOptions
+) => new class TestDatabase extends dexie {
+    public friends: Dexie.Table<Friend, string>;
+    public clubs: Dexie.Table<Club, number>;
+    public themes: Dexie.Table<Theme, number>;
+    public groups: Dexie.Table<Group, number>;
+    public styles: Dexie.Table<Style, number>;
+    public hairColors: Dexie.Table<HairColor, number>;
+    constructor(_name: string) {
+        super(_name);
+        addonSuite(this, config);
+        this.on('blocked', () => false);
+        this.version(1).stores({
+            friends: config?.secretKey ?
+                '#id, customId, $firstName, lastName, shoeSize, age, [age+shoeSize], hasFriends => friends.id, memberOf => clubs.id, group => groups.id, hairColor => hairColors.id' :
+
+                '++id, customId, firstName, lastName, shoeSize, age, [age+shoeSize], hasFriends => friends.id, memberOf => clubs.id, group => groups.id, hairColor => hairColors.id'
+            ,
+            clubs: '++id, name, theme => themes.id',
+            themes: '++id, name, style => styles.id',
+            styles: '++id, name, color',
+            groups: '++id, name',
+            hairColors: '++id, name'
+        });
+        this.friends.mapToClass(Friend);
+        this.clubs.mapToClass(Club);
+        this.themes.mapToClass(Theme);
+        this.groups.mapToClass(Group);
+        this.styles.mapToClass(Style);
+        this.hairColors.mapToClass(HairColor);
+    }
+}(name);
+
+
 export const databasesPositive = [
-    {
-        desc: 'TestDatabase',
-        immutable: true,
-        encrypted: true,
-        rxjs: true,
-        populate: true,
-        db: (dexie: typeof Dexie) => new class TestDatabase extends dexie {
-            public friends: Dexie.Table<Friend, string>;
-            public clubs: Dexie.Table<Club, number>;
-            public themes: Dexie.Table<Theme, number>;
-            public groups: Dexie.Table<Group, number>;
-            public styles: Dexie.Table<Style, number>;
-            public hairColors: Dexie.Table<HairColor, number>;
-            constructor(name: string) {
-                super(name);
-                const secretKey = Encryption.createRandomEncryptionKey();
-                addonSuite(this, { secretKey });
-                this.on('blocked', () => false);
-                this.version(1).stores({
-                    friends: '#id, customId, $firstName, lastName, shoeSize, age, [age+shoeSize], hasFriends => friends.id, memberOf => clubs.id, group => groups.id, hairColor => hairColors.id',
-                    clubs: '++id, name, theme => themes.id',
-                    themes: '++id, name, style => styles.id',
-                    styles: '++id, name, color',
-                    groups: '++id, name',
-                    hairColors: '++id, name'
-                });
-                this.friends.mapToClass(Friend);
-                this.clubs.mapToClass(Club);
-                this.themes.mapToClass(Theme);
-                this.groups.mapToClass(Group);
-                this.styles.mapToClass(Style);
-                this.hairColors.mapToClass(HairColor);
-            }
-        }('TestDatabase')
-    },
     {
         desc: 'TestDatabase - all addons',
         immutable: true,
         encrypted: true,
-        rxjs: true,
-        populate: true,
-        db: (dexie: typeof Dexie) => new class TestDatabase extends dexie {
-            public friends: Dexie.Table<Friend, string>;
-            public clubs: Dexie.Table<Club, number>;
-            public themes: Dexie.Table<Theme, number>;
-            public groups: Dexie.Table<Group, number>;
-            public styles: Dexie.Table<Style, number>;
-            public hairColors: Dexie.Table<HairColor, number>;
-            constructor(name: string) {
-                super(name);
-                const secretKey = Encryption.createRandomEncryptionKey();
-                addonSuite(this, { encrypted: { secretKey }, immutable: true, populate: true, rxjs: true });
-                this.on('blocked', () => false);
-                this.version(1).stores({
-                    friends: '#id, customId, $firstName, lastName, shoeSize, age, [age+shoeSize], hasFriends => friends.id, memberOf => clubs.id, group => groups.id, hairColor => hairColors.id',
-                    clubs: '++id, name, theme => themes.id',
-                    themes: '++id, name, style => styles.id',
-                    styles: '++id, name, color',
-                    groups: '++id, name',
-                    hairColors: '++id, name'
-                });
-                this.friends.mapToClass(Friend);
-                this.clubs.mapToClass(Club);
-                this.themes.mapToClass(Theme);
-                this.groups.mapToClass(Group);
-                this.styles.mapToClass(Style);
-                this.hairColors.mapToClass(HairColor);
-            }
-        }('TestDatabase - all addons')
+        db: (dexie: typeof Dexie) => getDatabase(dexie, 'TestDatabase - all addons', {
+            secretKey: Encryption.createRandomEncryptionKey()
+        })
     },
     {
         desc: 'TestDatabase - populate / observable',
-        rxjs: true,
-        populate: true,
-        db: (dexie: typeof Dexie) => new class TestDatabase extends dexie {
-            public friends: Dexie.Table<Friend, string>;
-            public clubs: Dexie.Table<Club, number>;
-            public themes: Dexie.Table<Theme, number>;
-            public groups: Dexie.Table<Group, number>;
-            public styles: Dexie.Table<Style, number>;
-            public hairColors: Dexie.Table<HairColor, number>;
-            constructor(name: string) {
-                super(name);
-                addonSuite(this, { populate: true, rxjs: true });
-                this.on('blocked', () => false);
-                this.version(1).stores({
-                    friends: '++id, customId, firstName, lastName, shoeSize, age, [age+shoeSize], hasFriends => friends.id, memberOf => clubs.id, group => groups.id, hairColor => hairColors.id',
-                    clubs: '++id, name, theme => themes.id',
-                    themes: '++id, name, style => styles.id',
-                    styles: '++id, name, color',
-                    groups: '++id, name',
-                    hairColors: '++id, name'
-                });
-                this.friends.mapToClass(Friend);
-                this.clubs.mapToClass(Club);
-                this.themes.mapToClass(Theme);
-                this.groups.mapToClass(Group);
-                this.styles.mapToClass(Style);
-                this.hairColors.mapToClass(HairColor);
-            }
-        }('TestDatabase - populate / observable')
+        encrypted: false,
+        immutable: false,
+        db: (dexie: typeof Dexie) => getDatabase(dexie, 'TestDatabase - populate / observable', {
+            immutable: false
+        })
     },
     {
-        desc: 'TestDatabase - immutable',
+        desc: 'TestDatabase - populate / observable / immutable',
+        encrypted: false,
         immutable: true,
-        db: (dexie: typeof Dexie) => new class TestDatabase extends dexie {
-            public friends: Dexie.Table<Friend, string>;
-            public clubs: Dexie.Table<Club, number>;
-            public themes: Dexie.Table<Theme, number>;
-            public groups: Dexie.Table<Group, number>;
-            public styles: Dexie.Table<Style, number>;
-            public hairColors: Dexie.Table<HairColor, number>;
-            constructor(name: string) {
-                super(name);
-                addonSuite(this, { immutable: true });
-                this.on('blocked', () => false);
-                this.version(1).stores({
-                    friends: '++id, customId, firstName, lastName, shoeSize, age, [age+shoeSize]',
-                    clubs: '++id, name',
-                    themes: '++id, name',
-                    styles: '++id, name, color',
-                    groups: '++id, name',
-                    hairColors: '++id, name'
-                });
-                this.friends.mapToClass(Friend);
-                this.clubs.mapToClass(Club);
-                this.themes.mapToClass(Theme);
-                this.groups.mapToClass(Group);
-                this.styles.mapToClass(Style);
-                this.hairColors.mapToClass(HairColor);
-            }
-        }('TestDatabase - immutable')
+        db: (dexie: typeof Dexie) => getDatabase(dexie, 'TestDatabase - populate / observable')
     },
     {
-        desc: 'TestDatabase - encrypted',
+        desc: 'TestDatabase - populate / observable / encrypted',
         encrypted: true,
-        db: (dexie: typeof Dexie) => new class TestDatabase extends dexie {
-            public friends: Dexie.Table<Friend, string>;
-            public clubs: Dexie.Table<Club, number>;
-            public themes: Dexie.Table<Theme, number>;
-            public groups: Dexie.Table<Group, number>;
-            public styles: Dexie.Table<Style, number>;
-            public hairColors: Dexie.Table<HairColor, number>;
-            constructor(name: string) {
-                super(name);
-                const secretKey = Encryption.createRandomEncryptionKey();
-                addonSuite(this, { encrypted: { secretKey } });
-                this.on('blocked', () => false);
-                this.version(1).stores({
-                    friends: '#id, customId, $firstName, lastName, shoeSize, age, [age+shoeSize]',
-                    clubs: '++id, name',
-                    themes: '++id, name',
-                    styles: '++id, name, color',
-                    groups: '++id, name',
-                    hairColors: '++id, name'
-                });
-                this.friends.mapToClass(Friend);
-                this.clubs.mapToClass(Club);
-                this.themes.mapToClass(Theme);
-                this.groups.mapToClass(Group);
-                this.styles.mapToClass(Style);
-                this.hairColors.mapToClass(HairColor);
-            }
-        }('TestDatabase - encrypted')
-    },
-    {
-        desc: 'TestDatabase - rxjs',
-        rxjs: true,
-        db: (dexie: typeof Dexie) => new class TestDatabase extends dexie {
-            public friends: Dexie.Table<Friend, string>;
-            public clubs: Dexie.Table<Club, number>;
-            public themes: Dexie.Table<Theme, number>;
-            public groups: Dexie.Table<Group, number>;
-            public styles: Dexie.Table<Style, number>;
-            public hairColors: Dexie.Table<HairColor, number>;
-            constructor(name: string) {
-                super(name);
-                addonSuite(this, { rxjs: true });
-                this.on('blocked', () => false);
-                this.version(1).stores({
-                    friends: '++id, customId, firstName, lastName, shoeSize, age, [age+shoeSize]',
-                    clubs: '++id, name',
-                    themes: '++id, name',
-                    styles: '++id, name, color',
-                    groups: '++id, name',
-                    hairColors: '++id, name'
-                });
-                this.friends.mapToClass(Friend);
-                this.clubs.mapToClass(Club);
-                this.themes.mapToClass(Theme);
-                this.groups.mapToClass(Group);
-                this.styles.mapToClass(Style);
-                this.hairColors.mapToClass(HairColor);
-            }
-        }('TestDatabase - rxjs')
-    },
-    {
-        desc: 'TestDatabase - populate',
-        populate: true,
-        db: (dexie: typeof Dexie) => new class TestDatabase extends dexie {
-            public friends: Dexie.Table<Friend, string>;
-            public clubs: Dexie.Table<Club, number>;
-            public themes: Dexie.Table<Theme, number>;
-            public groups: Dexie.Table<Group, number>;
-            public styles: Dexie.Table<Style, number>;
-            public hairColors: Dexie.Table<HairColor, number>;
-            constructor(name: string) {
-                super(name);
-                addonSuite(this, { populate: true });
-                this.on('blocked', () => false);
-                this.version(1).stores({
-                    friends: '++id, customId, firstName, lastName, shoeSize, age, [age+shoeSize], hasFriends => friends.id, memberOf => clubs.id, group => groups.id, hairColor => hairColors.id',
-                    clubs: '++id, name, theme => themes.id',
-                    themes: '++id, name, style => styles.id',
-                    styles: '++id, name, color',
-                    groups: '++id, name',
-                    hairColors: '++id, name'
-                });
-                this.friends.mapToClass(Friend);
-                this.clubs.mapToClass(Club);
-                this.themes.mapToClass(Theme);
-                this.groups.mapToClass(Group);
-                this.styles.mapToClass(Style);
-                this.hairColors.mapToClass(HairColor);
-            }
-        }('TestDatabase - populate')
+        immutable: true,
+        db: (dexie: typeof Dexie) => getDatabase(dexie, 'TestDatabase - populate / observable / encrypted', {
+            secretKey: Encryption.createRandomEncryptionKey(),
+            immutable: false
+        })
     }
 ];
 

@@ -5,35 +5,37 @@ import { dexieRxjs } from '@pvermeer/dexie-rxjs-addon';
 import Dexie from 'dexie';
 import { getPopulatedObservableTable } from './table-extended.class';
 
-interface Config {
-    immutable?: boolean;
+export interface Config {
     encrypted?: EncryptedOptions;
-    rxjs?: boolean;
-    populate?: boolean;
+    immutable?: boolean;
 }
 
-export function addonSuite(db: Dexie, config: Config | EncryptedOptions) {
+export function addonSuite(db: Dexie, config?: Config | EncryptedOptions) {
 
     // Process config
-    const addons: Record<keyof Config, boolean> = {
-        immutable: false,
+
+    /** Default config */
+    const addons: { [prop: string]: boolean } = {
+        immutable: true,
         encrypted: false,
-        rxjs: false,
-        populate: false
+        rxjs: true,
+        populate: true
     };
     let secretKey: string | undefined;
-    if ('secretKey' in config) {
-        Object.keys(addons).forEach(key => addons[key] = true);
-        secretKey = config.secretKey;
-        addons.immutable = config.immutable || true;
-    } else {
-        Object.entries(config as Config).forEach(([key, value]) => {
-            if (value && key in addons) { addons[key] = true; }
-            if (key === 'encrypted') {
-                secretKey = value.secretKey;
-                addons.immutable = value.immutable || true;
-            }
-        });
+    if (config) {
+        if ('secretKey' in config) {
+            Object.keys(addons).forEach(key => addons[key] = true);
+            secretKey = config.secretKey;
+            addons.immutable = config.immutable || true;
+        } else {
+            Object.entries(config as Config).forEach(([key, value]) => {
+                if (typeof value === 'boolean' && key in addons) { addons[key] = true; }
+                if (key === 'encrypted') {
+                    secretKey = value.secretKey;
+                    addons.immutable = value.immutable || true;
+                }
+            });
+        }
     }
 
     // Load addons
@@ -42,21 +44,17 @@ export function addonSuite(db: Dexie, config: Config | EncryptedOptions) {
         loadAddon(key, db, addons, secretKey);
     });
 
-    // Perform actions for combinations
-    if (addons.rxjs && addons.populate) {
-
-        Object.defineProperty(db, 'Table', {
-            value: getPopulatedObservableTable(db)
-        });
-
-    }
+    // Overwrite Table to a populated observable table
+    Object.defineProperty(db, 'Table', {
+        value: getPopulatedObservableTable(db)
+    });
 
 }
 
 export const loadAddon = (
     key: string,
     db: Dexie,
-    addons: Record<keyof Config, boolean>,
+    addons: { [prop: string]: boolean },
     secretKey: string | undefined
 ) => {
     switch (key) {
