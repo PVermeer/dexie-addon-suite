@@ -8,7 +8,7 @@ import * as addonSuiteModule from '../../../src/addon-suite';
 import { addonSuite, Encryption } from '../../../src/index';
 import { flatPromise } from '../../../src/utility';
 import { Club, databasesPositive, Friend, Group, HairColor, mockClubs, mockFriends, mockGroups, mockHairColors, mockStyles, mockThemes, Style, Theme } from '../../mocks/mocks';
-import { PopulateTableObservable } from '../../../src/populateTableObservable.class';
+import { PopulateTableObservable } from '../../../src/populate-table-observable.class';
 
 describe('Suite', () => {
     databasesPositive.forEach((database, _i) => {

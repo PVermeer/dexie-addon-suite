@@ -4,7 +4,7 @@ import Dexie, { Table } from 'dexie';
 import { isEqual } from 'lodash';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, filter, flatMap, share, startWith, switchMap } from 'rxjs/operators';
-import { PopulateObservableWhereClause } from './populateObservableWhereClause.class';
+import { PopulateObservableWhereClause } from './populate-observable-where-clause.class';
 import { Unpacked } from './utility-types';
 
 /**

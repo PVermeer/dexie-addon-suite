@@ -1,7 +1,7 @@
 import { Populated, PopulateOptions, PopulateTable, RelationalDbSchema } from '@pvermeer/dexie-populate-addon';
 import { ObservableTable } from '@pvermeer/dexie-rxjs-addon';
 import Dexie, { Table, TableSchema, Transaction } from 'dexie';
-import { PopulateTableObservable } from './populateTableObservable.class';
+import { PopulateTableObservable } from './populate-table-observable.class';
 import { DexieExtended } from './typings';
 
 export class PopulatedTableObservable<T, TKey, B extends boolean, K extends string> extends PopulateTable<T, TKey, B, K> {

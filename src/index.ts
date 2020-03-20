@@ -1,12 +1,12 @@
 import { PopulateOptions } from '@pvermeer/dexie-populate-addon';
-import { ObservableTablePopulated, PopulatedTableObservable } from './tableExt.class';
+import { ObservableTablePopulated, PopulatedTableObservable } from './table-extended.class';
 
 export { encrypted, Encryption } from '@pvermeer/dexie-encrypted-addon';
 export { immutable } from '@pvermeer/dexie-immutable-addon';
 export { populate, Ref } from '@pvermeer/dexie-populate-addon';
 export { dexieRxjs } from '@pvermeer/dexie-rxjs-addon';
 export { addonSuite } from './addon-suite';
-export { ObservableTablePopulated, PopulatedTableObservable } from './tableExt.class';
+export { ObservableTablePopulated, PopulatedTableObservable } from './table-extended.class';
 
 
 declare module 'dexie' {

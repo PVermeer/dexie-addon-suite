@@ -2,7 +2,7 @@ import { PopulateOptions } from '@pvermeer/dexie-populate-addon';
 import { ObservableCollection, ObservableWhereClause } from '@pvermeer/dexie-rxjs-addon';
 import Dexie, { Table } from 'dexie';
 import { DexieExtended } from './typings';
-import { PopulateObservableCollection } from './populateObservableCollection.class';
+import { PopulateObservableCollection } from './populate-observable-collection.class';
 
 export class PopulateObservableWhereClause<T, TKey, B extends boolean, K extends string> extends ObservableWhereClause<T, TKey> {
 
