@@ -166,6 +166,11 @@ describe('Suite', () => {
                     const friendObs = await db.friends.$.get(id).pipe(take(1)).toPromise();
                     expect(friendObs).toEqual(friendExpected);
                 });
+                it('should not be an observable', async () => {
+                    const getFriend = await db.friends.get(id);
+                    expect(getFriend instanceof Observable).toBeFalse();
+                    expect(getFriend).toEqual(friendExpected);
+                });
             });
             describe('Populate', () => {
                 it('should have populate class', () => {
@@ -173,7 +178,11 @@ describe('Suite', () => {
                 });
                 it('should be populated', async () => {
                     const friendPop = await db.friends.populate().get(id);
-                    expect(friendPop).toEqual(friendExpectedPop as any);
+                    expect(friendPop).toEqual(friendExpectedPop);
+                });
+                it('should not be populated', async () => {
+                    const friendPop = await db.friends.get(id);
+                    expect(friendPop).toEqual(friendExpected);
                 });
             });
             describe('Populate - Observable', () => {
@@ -365,7 +374,7 @@ describe('Suite', () => {
                             // Update different record
                             const idx2 = faker.random.number({ min: 10, max: 19 });
                             const id2 = newIds[idx2];
-                            await db.friends.update(id2, newFriends[idx2]);
+                            await db.friends.update(id2, { firstName: 'Testie' });
                             setTimeout(() => waits[1].resolve(), 500);
                             await waits[1].promise;
                             expect(emitCount).toBe(1);
@@ -377,7 +386,7 @@ describe('Suite', () => {
                             expect(emitCount).toBe(1);
 
                             // Update record with different data
-                            await db.friends.update(id1, newFriends[49]);
+                            await db.friends.update(id1, { firstName: 'Testie' });
                             await waits[3].promise;
                             expect(emitCount).toBe(2);
                         });
@@ -548,6 +557,30 @@ describe('Suite', () => {
                                 });
                                 await emitPromise;
                                 expect(obsFriend).toEqual([]);
+                            });
+                        });
+                        describe('Indices', () => {
+                            it('should index memberOf', async () => {
+                                const getFriend = await method.get({ group: groupIds[1] }).pipe(take(1)).toPromise();
+                                expect(getFriend).toEqual(friendExpectedPop);
+                            });
+                            it('should multiIndex memberOf', async () => {
+                                const getFriend = await method.get({ memberOf: clubIds[1] }).pipe(take(1)).toPromise();
+                                expect(getFriend).toEqual(friendExpectedPop);
+                            });
+                        });
+                        describe('Compound index', () => {
+                            it('should index [id+group]', async () => {
+                                const getFriend = await method.get({ id, group: groupIds[1] }).pipe(take(1)).toPromise();
+                                expect(getFriend).toEqual(friendExpectedPop);
+
+                                const [getFriendWhere] = await method
+                                    .where('[id+group]')
+                                    .equals([id, groupIds[1]])
+                                    .toArray()
+                                    .pipe(take(1))
+                                    .toPromise();
+                                expect(getFriendWhere).toEqual(friendExpectedPop);
                             });
                         });
                     });

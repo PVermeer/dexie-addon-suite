@@ -133,10 +133,10 @@ const getDatabase = (
         this.on('blocked', () => false);
         this.version(1).stores({
             friends: config?.secretKey ?
-                '#id, customId, $firstName, lastName, shoeSize, age, [age+shoeSize], hasFriends => friends.id, memberOf => clubs.id, group => groups.id, hairColor => hairColors.id' :
+                '#id, &customId, $firstName, lastName, shoeSize, age, hasFriends => friends.id, *memberOf => clubs.id, group => groups.id, &hairColor => hairColors.id, [id+group]' :
 
-                '++id, customId, firstName, lastName, shoeSize, age, [age+shoeSize], hasFriends => friends.id, memberOf => clubs.id, group => groups.id, hairColor => hairColors.id'
-            ,
+                '++id, &customId, $firstName, lastName, shoeSize, age, hasFriends => friends.id, *memberOf => clubs.id, group => groups.id, &hairColor => hairColors.id, [id+group]',
+
             clubs: '++id, name, theme => themes.id',
             themes: '++id, name, style => styles.id',
             styles: '++id, name, color',
@@ -202,8 +202,8 @@ export const mockFriends = (count: number = 5): Friend[] => {
     });
     return new Array(count).fill(null).map(() => {
         const mockfriend = friend();
-        mockfriend.customId = customId;
         customId++;
+        mockfriend.customId = customId;
         return mockfriend;
     });
 };
