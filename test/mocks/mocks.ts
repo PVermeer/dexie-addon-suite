@@ -137,11 +137,11 @@ const getDatabase = (
 
                 '++id, &customId, $firstName, lastName, shoeSize, age, hasFriends => friends.id, *memberOf => clubs.id, group => groups.id, &hairColor => hairColors.id, [id+group]',
 
-            clubs: '++id, name, theme => themes.id',
-            themes: '++id, name, style => styles.id',
-            styles: '++id, name, color',
-            groups: '++id, name',
-            hairColors: '++id, name'
+            clubs: '++id, $name, theme => themes.id',
+            themes: '++id, $name, style => styles.id',
+            styles: '++id, $name, color',
+            groups: '++id, $name',
+            hairColors: '++id, $name'
         });
         this.friends.mapToClass(Friend);
         this.clubs.mapToClass(Club);
