@@ -6,9 +6,9 @@ import { Observable, Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 import * as addonSuiteModule from '../../../src/addon-suite';
 import { addonSuite, Encryption } from '../../../src/index';
+import { PopulateTableObservable } from '../../../src/populate-table-observable.class';
 import { flatPromise } from '../../../src/utility';
 import { Club, databasesPositive, Friend, Group, HairColor, mockClubs, mockFriends, mockGroups, mockHairColors, mockStyles, mockThemes, Style, Theme } from '../../mocks/mocks';
-import { PopulateTableObservable } from '../../../src/populate-table-observable.class';
 
 describe('Suite', () => {
     databasesPositive.forEach((database, _i) => {
@@ -136,6 +136,7 @@ describe('Suite', () => {
                 describe('Encrypted', () => {
                     it('should hash id', async () => {
                         const getFriend = await db.friends.get(id) as Friend;
+                        if (friend.id) { delete friend.id; }
                         const hashId = Encryption.hash(friend);
                         expect(getFriend.id).toBe(hashId);
                     });
@@ -228,18 +229,15 @@ describe('Suite', () => {
                             expect(sub.closed).toBe(false);
                         });
                         it('should emit the correct value', async () => {
-                            const obs$ = method.get(id);
-                            const getFriend = await obs$.pipe(take(1)).toPromise();
+                            const getFriend = await method.get(id).pipe(take(1)).toPromise();
                             expect(getFriend).toEqual(friendExpectedPop);
 
                             const [newFriend] = mockFriends(1);
                             const newId = await db.friends.add(newFriend);
-                            const obsNew$ = method.get(newId);
-                            const getNewFriend = await obsNew$.pipe(take(1)).toPromise();
+                            const getNewFriend = await method.get(newId).pipe(take(1)).toPromise();
                             expect({ ...getNewFriend }).toEqual({ ...newFriend, id: newId });
 
-                            const obsOld$ = method.get(id);
-                            const getOldFriend = await obsOld$.pipe(take(1)).toPromise();
+                            const getOldFriend = await method.get(id).pipe(take(1)).toPromise();
                             expect(getOldFriend).toEqual(friendExpectedPop);
                         });
                         it('should emit on record update', async () => {
@@ -591,17 +589,93 @@ describe('Suite', () => {
 });
 
 describe('Addon-suite function', () => {
-    it('should always load default addons', async () => {
-        const db = databasesPositive[0].db(Dexie);
-        await db.open();
-
+    it('should be able to provide config via setConfig', async () => {
         const addons: string[] = [];
         spyOn(addonSuiteModule, 'loadAddon').and.callFake(key => {
             addons.push(key);
         });
-        addonSuite(db);
-        expect(addonSuiteModule.loadAddon).toHaveBeenCalledTimes(3);
+        const func = addonSuite.setConfig({ immutable: false });
+        func(new Dexie('TestieDb'));
+        expect(addons).toEqual(['rxjs', 'populate']);
+    });
+    it('should always load default addons', async () => {
+        const addons: string[] = [];
+        spyOn(addonSuiteModule, 'loadAddon').and.callFake(key => {
+            addons.push(key);
+        });
+        addonSuite(new Dexie('TestieDb'));
         expect(addons).toEqual(['immutable', 'rxjs', 'populate']);
-        await db.delete();
+    });
+    it('should not crash on wrong config', async () => {
+        expect(() => addonSuite(new Dexie('TestieDb'), { immutable: 34 } as any)).not.toThrow();
+    });
+    it('should load encrypted with secretKey config', async () => {
+        const addons: string[] = [];
+        spyOn(addonSuiteModule, 'loadAddon').and.callFake(key => {
+            addons.push(key);
+        });
+
+        addonSuite(new Dexie('TestieDb'), { secretKey: 'sdfsdf' });
+        expect(addons).toEqual(['immutable', 'encrypted', 'rxjs', 'populate']);
+    });
+    it('should load encrypted and not load immutable with secretKey config', async () => {
+        const addons: string[] = [];
+        spyOn(addonSuiteModule, 'loadAddon').and.callFake(key => {
+            addons.push(key);
+        });
+
+        addonSuite(new Dexie('TestieDb'), { secretKey: 'sdfsdf', immutable: false });
+        expect(addons).toEqual(['encrypted', 'rxjs', 'populate']);
+    });
+    it('should load encrypted with immutable', async () => {
+        const addons: string[] = [];
+        spyOn(addonSuiteModule, 'loadAddon').and.callFake(key => {
+            addons.push(key);
+        });
+
+        addonSuite(new Dexie('TestieDb'), { encrypted: { secretKey: 'sdfsdfsfwefwcv' } });
+        expect(addons).toEqual(['immutable', 'encrypted', 'rxjs', 'populate']);
+    });
+    it('should load encrypted without immutable', async () => {
+        const addons: string[] = [];
+        spyOn(addonSuiteModule, 'loadAddon').and.callFake(key => {
+            addons.push(key);
+        });
+
+        addonSuite(new Dexie('TestieDb'), { encrypted: { secretKey: 'sdfsdfsfwefwcv', immutable: false } });
+        expect(addons).toEqual(['encrypted', 'rxjs', 'populate']);
+    });
+    it('should load default without immutable', async () => {
+        const addons: string[] = [];
+        spyOn(addonSuiteModule, 'loadAddon').and.callFake(key => {
+            addons.push(key);
+        });
+
+        addonSuite(new Dexie('TestieDb'), { immutable: false });
+        expect(addons).toEqual(['rxjs', 'populate']);
+    });
+    it('should overwrite immutable from encrypted', async () => {
+        const addons: string[] = [];
+        spyOn(addonSuiteModule, 'loadAddon').and.callFake(key => {
+            addons.push(key);
+        });
+
+        addonSuite(new Dexie('TestieDb'), {
+            immutable: false,
+            encrypted: { secretKey: 'sdfsdf', immutable: true }
+        });
+        expect(addons).toEqual(['immutable', 'encrypted', 'rxjs', 'populate']);
+    });
+    it('should not overwrite immutable from encrypted', async () => {
+        const addons: string[] = [];
+        spyOn(addonSuiteModule, 'loadAddon').and.callFake(key => {
+            addons.push(key);
+        });
+
+        addonSuite(new Dexie('TestieDb'), {
+            immutable: true,
+            encrypted: { secretKey: 'sdfsdf', immutable: false }
+        });
+        expect(addons).toEqual(['encrypted', 'rxjs', 'populate']);
     });
 });

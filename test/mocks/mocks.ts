@@ -132,7 +132,7 @@ const getDatabase = (
         addonSuite(this, config);
         this.on('blocked', () => false);
         this.version(1).stores({
-            friends: config?.secretKey ?
+            friends: config?.secretKey || config?.encrypted?.secretKey ?
                 '#id, &customId, $firstName, lastName, shoeSize, age, hasFriends => friends.id, *memberOf => clubs.id, group => groups.id, &hairColor => hairColors.id, [id+group]' :
 
                 '++id, &customId, $firstName, lastName, shoeSize, age, hasFriends => friends.id, *memberOf => clubs.id, group => groups.id, &hairColor => hairColors.id, [id+group]',
@@ -154,6 +154,7 @@ const getDatabase = (
 
 
 export const databasesPositive = [
+    // Not testing with immutable false because this makes testing a living hell...
     {
         desc: 'TestDatabase - all addons',
         immutable: true,
@@ -163,27 +164,10 @@ export const databasesPositive = [
         })
     },
     {
-        desc: 'TestDatabase - populate / observable',
-        encrypted: false,
-        immutable: false,
-        db: (dexie: typeof Dexie) => getDatabase(dexie, 'TestDatabase - populate / observable', {
-            immutable: false
-        })
-    },
-    {
         desc: 'TestDatabase - populate / observable / immutable',
         encrypted: false,
         immutable: true,
         db: (dexie: typeof Dexie) => getDatabase(dexie, 'TestDatabase - populate / observable')
-    },
-    {
-        desc: 'TestDatabase - populate / observable / encrypted',
-        encrypted: true,
-        immutable: true,
-        db: (dexie: typeof Dexie) => getDatabase(dexie, 'TestDatabase - populate / observable / encrypted', {
-            secretKey: Encryption.createRandomEncryptionKey(),
-            immutable: false
-        })
     }
 ];
 

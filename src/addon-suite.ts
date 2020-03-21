@@ -12,8 +12,6 @@ export interface Config {
 
 export function addonSuite(db: Dexie, config?: Config | EncryptedOptions) {
 
-    // Process config
-
     /** Default config */
     const addons: { [prop: string]: boolean } = {
         immutable: true,
@@ -22,20 +20,22 @@ export function addonSuite(db: Dexie, config?: Config | EncryptedOptions) {
         populate: true
     };
     let secretKey: string | undefined;
+
+    // Process config
     if (config) {
-        if ('secretKey' in config) {
-            Object.keys(addons).forEach(key => addons[key] = true);
-            secretKey = config.secretKey;
-            addons.immutable = config.immutable || true;
-        } else {
-            Object.entries(config as Config).forEach(([key, value]) => {
-                if (typeof value === 'boolean' && key in addons) { addons[key] = true; }
-                if (key === 'encrypted') {
-                    secretKey = value.secretKey;
-                    addons.immutable = value.immutable || true;
-                }
-            });
-        }
+        Object.entries(config as Config).forEach(([key, value]) => {
+            if (typeof value === 'boolean' && key in addons) { addons[key] = value; }
+            if (key === 'encrypted') {
+                addons.encrypted = true;
+                secretKey = value.secretKey;
+                addons.immutable = value.immutable === false ? false : true;
+            }
+            if ('secretKey' in config) {
+                addons.encrypted = true;
+                secretKey = config.secretKey;
+                addons.immutable = config.immutable === false ? false : true;
+            }
+        });
     }
 
     // Load addons
@@ -65,4 +65,4 @@ export const loadAddon = (
     }
 };
 
-addonSuite.setOptions = (config: Config | EncryptedOptions) => (db: Dexie) => encrypted(db, config);
+addonSuite.setConfig = (config: Config | EncryptedOptions) => (db: Dexie) => addonSuite(db, config);
