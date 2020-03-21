@@ -65,3 +65,4 @@ export const loadAddon = (
     }
 };
 
+addonSuite.setOptions = (config: Config | EncryptedOptions) => (db: Dexie) => encrypted(db, config);
