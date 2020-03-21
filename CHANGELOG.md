@@ -1,0 +1,15 @@
+# 1.0.0-beta.1 (2020-03-21)
+
+
+### Bug Fixes
+
+* **coverage:** 100% coverage fixes ([f1314d8](https://github.com/PVermeer/dexie-addon-suite/commit/f1314d84c9d567fe2e308448c72502070b764086))
+* **observable-populate:** added tests + fixes ([045c4c7](https://github.com/PVermeer/dexie-addon-suite/commit/045c4c7c8e80350673955f283d90ad7a9124baf1))
+* **testing:** fixes and refactoring after adding more test databases ([68edeab](https://github.com/PVermeer/dexie-addon-suite/commit/68edeab583201a45a3d40713e0bcc53e7f865fec))
+
+
+### Features
+
+* config can be provide via namespace ([876c135](https://github.com/PVermeer/dexie-addon-suite/commit/876c1357a015ff30de28928041c479f5c0ae56a2))
+* **addons:** rxjs and populate are now mandatory ([b10075b](https://github.com/PVermeer/dexie-addon-suite/commit/b10075b65da4c2bbe585209c9f2103c707aee397))
+* initial addon suite + tests ([7a8b395](https://github.com/PVermeer/dexie-addon-suite/commit/7a8b3955611f9158f3050dadf13c63bc6a7d74ee))
