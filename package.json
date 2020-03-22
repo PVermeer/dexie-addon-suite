@@ -12,7 +12,13 @@
     "indexeddb",
     "database",
     "addon",
-    "suite"
+    "suite",
+    "rxjs",
+    "populate",
+    "immutable",
+    "encrypted",
+    "observable",
+    "relational"
   ],
   "files": [
     "dist"
