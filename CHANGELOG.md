@@ -1,3 +1,10 @@
+# [1.0.0-beta.2](https://github.com/PVermeer/dexie-addon-suite/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2020-03-22)
+
+
+### Bug Fixes
+
+* **rxjs:** update dexie-rxjs-addon ([e8c94b2](https://github.com/PVermeer/dexie-addon-suite/commit/e8c94b2136597bcf849dfbdea9ade14de5a3dd25))
+
 # 1.0.0-beta.1 (2020-03-21)
 
 
