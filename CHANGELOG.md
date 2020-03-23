@@ -1,3 +1,10 @@
+# [1.0.0-beta.3](https://github.com/PVermeer/dexie-addon-suite/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2020-03-23)
+
+
+### Bug Fixes
+
+* **declarations:** added support for older TS versions ([80d8038](https://github.com/PVermeer/dexie-addon-suite/commit/80d8038dd35db519d81690470838f679dc29e4ac))
+
 # [1.0.0-beta.2](https://github.com/PVermeer/dexie-addon-suite/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2020-03-22)
 
 
