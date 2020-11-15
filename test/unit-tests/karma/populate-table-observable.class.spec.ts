@@ -9,5 +9,6 @@ describe('PopulateTableObservable', () => {
         (ObservableTable.prototype as any).test = () => 'something';
         const popTableObsClass = new PopulateTableObservable(db, db.friends, undefined);
         expect((popTableObsClass as any).test()).toBe('something');
+        await db.delete();
     });
 });
