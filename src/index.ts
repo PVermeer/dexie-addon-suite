@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 import { PopulateOptions } from '@pvermeer/dexie-populate-addon';
 import { ObservableTablePopulated, PopulatedTableObservable } from './table-extended.class';
 
