@@ -27,8 +27,7 @@ describe('HTML script tag', () => {
         await Promise.all([
             await new Promise(resolve => {
                 const script = document.createElement('script');
-                console.warn('Still using dexie@next HTML import !!!!!!!!!!!!!!!!!!!!!!!!');
-                script.src = 'https://unpkg.com/dexie@next/dist/dexie.js';
+                script.src = 'https://unpkg.com/dexie/dist/dexie.js';
                 script.type = 'text/javascript';
                 script.onload = () => resolve();
                 document.head.append(script);
@@ -178,7 +177,6 @@ describe('HTML script tag', () => {
         it('should be able to use normally', async () => {
             const getFriend = await db.friends.get(id);
             expect(getFriend).toEqual(friendExpected);
-            await db.delete();
         });
         it('should be able to get an observable', async () => {
             const getFriend = await db.friends.$.get(id).pipe(rxjs.operators.take(1)).toPromise();
