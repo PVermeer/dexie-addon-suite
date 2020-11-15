@@ -1,3 +1,10 @@
+# [1.0.0-beta.5](https://github.com/PVermeer/dexie-addon-suite/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2020-11-15)
+
+
+### Features
+
+* **dexie-3:** updated to dexie 3 + dockerized environment ([c907696](https://github.com/PVermeer/dexie-addon-suite/commit/c9076965bdc4942f911c93ee4c8a05e7119b3afe))
+
 # [1.0.0-beta.4](https://github.com/PVermeer/dexie-addon-suite/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2020-03-23)
 
 
