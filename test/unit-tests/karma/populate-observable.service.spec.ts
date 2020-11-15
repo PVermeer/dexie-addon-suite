@@ -10,5 +10,6 @@ describe('PopulateObservableService', () => {
         (ObservableCollection.prototype as any).test = () => 'something';
         const popObsClass = new PopulateObservableCollection(db, db.friends, collection, undefined);
         expect((popObsClass as any).test()).toBe('something');
+        await db.delete();
     });
 });

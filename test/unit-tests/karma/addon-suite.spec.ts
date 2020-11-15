@@ -209,15 +209,17 @@ describe('Suite', () => {
                 ];
                 methods.forEach(_method => {
                     describe(_method.desc, () => {
-                        let method: ReturnType<typeof _method.method>;
-                        beforeEach(() => {
-                            method = _method.method(db);
-                        });
+                        // let method: ReturnType<typeof _method.method>;
+                        // beforeEach(async () => {
+                        //     method = _method.method(db);
+                        // });
                         it('should be an observable', async () => {
+                            const method = _method.method(db);
                             const obs$ = method.get(id);
                             expect(obs$ instanceof Observable).toBeTrue();
                         });
                         it('should be open', async () => {
+                            const method = _method.method(db);
                             const obs$ = method.get(id);
                             let sub = new Subscription();
                             const emitPromise = new Promise(resolve => {
@@ -229,6 +231,7 @@ describe('Suite', () => {
                             expect(sub.closed).toBe(false);
                         });
                         it('should emit the correct value', async () => {
+                            const method = _method.method(db);
                             const getFriend = await method.get(id).pipe(take(1)).toPromise();
                             expect(getFriend).toEqual(friendExpectedPop);
 
@@ -241,6 +244,7 @@ describe('Suite', () => {
                             expect(getOldFriend).toEqual(friendExpectedPop);
                         });
                         it('should emit on record update', async () => {
+                            const method = _method.method(db);
                             let emitCount = 0;
                             let obsFriend: Populated<Friend, false, string> | undefined;
                             const emitPromise = new Promise(resolve => {
@@ -258,6 +262,7 @@ describe('Suite', () => {
                             expect({ ...obsFriend }).toEqual({ ...friendExpectedPop, firstName: 'TestieUpdate' });
                         });
                         it('should emit undefined on record delete', async () => {
+                            const method = _method.method(db);
                             let emitCount = 0;
                             let obsFriend: Populated<Friend, false, string> | undefined;
 
@@ -281,6 +286,7 @@ describe('Suite', () => {
                             expect(obsFriend).toBe(undefined);
                         });
                         it('should emit undefined on record delete (slowed)', async () => {
+                            const method = _method.method(db);
                             let emitCount = 0;
                             let obsFriend: Populated<Friend, false, string> | undefined;
 
@@ -308,6 +314,7 @@ describe('Suite', () => {
                             expect(obsFriend).toBe(undefined);
                         });
                         it('should emit undefined when id is not found', async () => {
+                            const method = _method.method(db);
                             let emitCount = 0;
                             let obsFriend: Populated<Friend, false, string> | undefined;
                             const emitPromise = new Promise(resolve => {
@@ -323,6 +330,7 @@ describe('Suite', () => {
                             expect(obsFriend).toBe(undefined);
                         });
                         it('should emit when record is created after subscribe', async () => {
+                            const method = _method.method(db);
                             const [newFriend] = mockFriends(1);
                             const lastId = await db.friends.add(mockFriends(1)[0]);
                             const newId = database.encrypted ? Encryption.hash(newFriend) : lastId + 1;
@@ -342,6 +350,7 @@ describe('Suite', () => {
                             expect({ ...obsFriend }).toEqual({ ...newFriend, id: newId } as Populated<Friend, false, string>);
                         });
                         it('should not emit when no changes', async () => {
+                            const method = _method.method(db);
                             const newFriends = mockFriends(50);
                             const newIds = await db.friends.bulkAdd(newFriends, { allKeys: true });
 
@@ -389,6 +398,7 @@ describe('Suite', () => {
                             expect(emitCount).toBe(2);
                         });
                         it('should emit when populated property is updated', async () => {
+                            const method = _method.method(db);
                             let emitCount = 0;
                             let obsFriend: Populated<Friend, false, string> | undefined;
 
@@ -438,6 +448,7 @@ describe('Suite', () => {
                             expect(emitCount).toBe(6);
                         });
                         it('should emit when updating a nested populated id, then update update this record', async () => {
+                            const method = _method.method(db);
                             let emitCount = 0;
                             let obsFriend: Populated<Friend, false, string> | undefined;
                             const newGroups = mockGroups();
@@ -472,6 +483,7 @@ describe('Suite', () => {
                             expect(emitCount).toBe(3);
                         });
                         it('should not emit when other populated properties are updated', async () => {
+                            const method = _method.method(db);
                             let emitCount = 0;
                             let obsFriend: Populated<Friend, false, string> | undefined;
 
@@ -514,12 +526,14 @@ describe('Suite', () => {
                         });
                         describe('Array methods', () => {
                             it('should be an array', async () => {
+                                const method = _method.method(db);
                                 const getFriends1 = await method.toArray().pipe(take(1)).toPromise();
                                 expect(Array.isArray(getFriends1)).toBeTrue();
                                 const getFriends2 = await method.where(':id').anyOf(ids).toArray().pipe(take(1)).toPromise();
                                 expect(Array.isArray(getFriends2)).toBeTrue();
                             });
                             it('should populate an entire table', async () => {
+                                const method = _method.method(db);
                                 const getFriendsPromises = await Promise.all([
                                     method.toArray().pipe(take(1)).toPromise(),
                                     method.where(':id').anyOf(ids).toArray().pipe(take(1)).toPromise()
@@ -542,6 +556,7 @@ describe('Suite', () => {
                                 });
                             });
                             it('should emit [] when nothing is not found', async () => {
+                                const method = _method.method(db);
                                 let emitCount = 0;
                                 let obsFriend: Populated<Friend, false, string>[] | undefined;
                                 const emitPromise = new Promise(resolve => {
@@ -559,16 +574,19 @@ describe('Suite', () => {
                         });
                         describe('Indices', () => {
                             it('should index memberOf', async () => {
+                                const method = _method.method(db);
                                 const getFriend = await method.get({ group: groupIds[1] }).pipe(take(1)).toPromise();
                                 expect(getFriend).toEqual(friendExpectedPop);
                             });
                             it('should multiIndex memberOf', async () => {
+                                const method = _method.method(db);
                                 const getFriend = await method.get({ memberOf: clubIds[1] }).pipe(take(1)).toPromise();
                                 expect(getFriend).toEqual(friendExpectedPop);
                             });
                         });
                         describe('Compound index', () => {
                             it('should index [id+group]', async () => {
+                                const method = _method.method(db);
                                 const getFriend = await method.get({ id, group: groupIds[1] }).pipe(take(1)).toPromise();
                                 expect(getFriend).toEqual(friendExpectedPop);
 
