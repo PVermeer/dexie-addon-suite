@@ -74,7 +74,7 @@
     "@pvermeer/dexie-encrypted-addon": "^2.0.0-beta.6",
     "@pvermeer/dexie-immutable-addon": "^1.0.0-beta.8",
     "@pvermeer/dexie-populate-addon": "^1.0.0-beta.7",
-    "@pvermeer/dexie-rxjs-addon": "^1.0.0-beta.17",
+    "@pvermeer/dexie-rxjs-addon": "^1.0.0-beta.18",
     "lodash.isequal": "^4.5.0",
     "tslib": "^1.14.1"
   },
