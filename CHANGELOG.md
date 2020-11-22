@@ -1,3 +1,11 @@
+# [1.0.0-beta.6](https://github.com/PVermeer/dexie-addon-suite/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2020-11-22)
+
+
+### Bug Fixes
+
+* **build:** do not require full lodash as a dependency ([8e521d9](https://github.com/PVermeer/dexie-addon-suite/commit/8e521d9d7aeb4d75d6866dede7cfea9b08356824))
+* **ci:** disabled html script test ([6d90387](https://github.com/PVermeer/dexie-addon-suite/commit/6d903872a633fe436d3edc617f69b1dc1c14ea84))
+
 # [1.0.0-beta.5](https://github.com/PVermeer/dexie-addon-suite/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2020-11-15)
 
 

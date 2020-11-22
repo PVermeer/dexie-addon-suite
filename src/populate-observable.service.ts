@@ -1,6 +1,6 @@
 import { Populate, Populated, PopulateOptions, PopulateTree } from '@pvermeer/dexie-populate-addon';
 import { Table } from 'dexie';
-import { isEqual } from 'lodash';
+import isEqual from 'lodash.isequal';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, filter, flatMap, share, startWith, switchMap } from 'rxjs/operators';
 import { DexieExtended } from './typings';

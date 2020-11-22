@@ -121,7 +121,7 @@ describe('Suite', () => {
                         ];
                         overrideMethods.forEach(method => {
                             expect(db.Table.prototype[method].toString())
-                                .toEqual(jasmine.stringMatching('cloneDeep'));
+                                .toEqual(jasmine.stringMatching('clonedeep'));
                         });
                     });
                     it('should not change input object', async () => {
